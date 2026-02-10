@@ -2,8 +2,6 @@ name: CI - API
 
 on:
   pull_request:
-    branches:
-      - main
     types: [opened, synchronize, reopened]
     paths:
       - 'api/**'
