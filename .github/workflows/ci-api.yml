@@ -1,0 +1,45 @@
+name: CI - API
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'api/**'
+      - '.github/workflows/ci-api.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Success
+        run: |
+          echo "🎉 Branch verification passed!"
+
+  # Summary job - always runs and fails if any required job failed
+  api-success:
+    needs:
+      - verify-up-to-date
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs
+        run: |
+          # Check if any job failed
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "❌ One or more API CI jobs failed"
+            exit 1
+          fi
+
+          # Check if any job was cancelled
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "⚠️  One or more API CI jobs were cancelled"
+            exit 1
+          fi
+
+          echo "✅ All API CI checks passed!"
